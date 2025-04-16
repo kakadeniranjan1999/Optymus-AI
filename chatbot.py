@@ -1,7 +1,11 @@
-from pipeline import SoulPipeline
+from optymus_team import OptymusTeam
+import time
+from dotenv import load_dotenv
 
-
-chatbot = SoulPipeline()
+load_dotenv()
+team_optymus = OptymusTeam()
 
 def chat(msg, model):
-    return chatbot.rag_request_handler(msg, model)
+    for chunk in team_optymus.invoke_team(msg).content:
+        yield chunk
+        time.sleep(0.005)

@@ -3,9 +3,10 @@ from langchain_chroma import Chroma
 
 
 class SoulDB:
-    def __init__(self, collection_name, path, save_db, embed_model, provider):
+    def __init__(self, collection_name, k, path, save_db, embed_model, provider):
         self.db = None
         self._collection_name = collection_name
+        self._k = k
         self._path = path
         self._save_db = save_db
         self._embedding_function = self.get_embedding_model(model=embed_model, provider=provider)
@@ -30,4 +31,4 @@ class SoulDB:
             )
 
     def get_retriever(self):
-        return self.db.as_retriever()
+        return self.db.as_retriever(search_kwargs={'k': self._k})

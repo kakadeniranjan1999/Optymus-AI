@@ -13,6 +13,7 @@ class SoulPipeline:
 
         self.vector_db = SoulDB(
             collection_name="soul-db",
+            k=4,
             path="./database",
             save_db=False,
             embed_model="nomic-embed-text",
@@ -44,18 +45,49 @@ class SoulPipeline:
     def load_model(self):
         self.llm = OllamaLLM(model=self.model)
 
-    def chat(self, msg, model):
+    def check_model(self, model):
         if model != self.model:
             self.model = model
             self.load_model()
 
-        context = self.retriever.invoke(msg)
+    def context_reformater_string(self, doc_list):
+        return f"\n{'-' * 100}\n".join(
+                [
+                    f"Document {i + 1}:\n\n{d.page_content}\n\nMetadata: {d.metadata}"
+                    for i, d in enumerate(doc_list)
+                ]
+            )
 
+    def context_reformater_json(self, doc_list):
+        context_dict = {}
+        for i, d in enumerate(doc_list):
+            context_dict[str(i+1)] = f"Document {i + 1}:\n\n{d.page_content}\n"
+        return context_dict
+
+    def retrieve_docs(self, msg):
+        return self.retriever.invoke(msg)
+
+    def generate_response(self, msg, context):
         message = self.prompt.invoke(
             {
                 "question": msg,
                 "context": context
             }
         )
-
         return self.llm.stream(message)
+
+    def rag_request_handler(self, msg, model):
+        self.check_model(model)
+
+        context = self.context_reformater_string(self.retrieve_docs(msg))
+
+        response = self.generate_response(msg, context)
+
+        return response
+
+    def agentic_request_handler(self, agent, query, num_documents, model="mistral"):
+        self.check_model(model)
+
+        context = [self.context_reformater_json(self.retrieve_docs(query))]
+
+        return context

@@ -85,7 +85,7 @@ class SoulPipeline:
 
         return response
 
-    def agentic_request_handler(self, agent, query, num_documents, model="mistral"):
+    def agentic_request_handler(self, query, model="mistral"):
         self.check_model(model)
 
         context = [self.context_reformater_json(self.retrieve_docs(query))]
